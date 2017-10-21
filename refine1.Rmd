@@ -1,0 +1,118 @@
+--
+title: "Data Wrangling Ex 1_refine1"
+author: "H Karen Tam"
+date: "October 20, 2017"
+output: html_document
+---
+### Data Wrangling Exercise 1: Basic Data Manipulation
+
+#### Load Packages and Read csv File
+```{r}
+
+# Load package
+
+suppressMessages(library(dplyr))
+suppressMessages(library(tidyr))
+
+# Read the csv file
+
+refine_clean <- read.csv("refine_original.csv")
+
+```
+
+#### Clean Up Brand Names
+
+```{r}
+
+## Clean up brand names in the "company"" column
+
+# Transform values in the column: philips, akzo, van houten and unilever (all lowercase)
+
+refine_clean <- refine_clean %>% 
+mutate(company = tolower(company)) %>% 
+mutate(company = gsub("phillips|phllips|phillps|fillips|phlips", "philips", company)) %>% 
+mutate(company = gsub("unilver", "unilever", company)) %>% 
+mutate(company = gsub("akz0|ak zo", "akzo", company))
+
+```
+
+#### Separate Product Code and Number
+
+```{r}
+
+## Separate product code and number
+
+# Add two new columns called product_code and product_number, containing the product code and number respectively.
+
+refine_clean <- refine_clean %>% 
+  separate(Product.code...number, c("product_code", "product_number"), sep = "-")
+
+```
+
+#### Add Product Categories
+
+```{r}
+## Add product categories
+
+# Add a column with the product category for each record. p = Smartphone; v = TV; x = Laptop; and q = Tablet.
+
+refine_clean$product_category <- refine_clean$product_code
+
+# Change values from p, v, x, or q to Smartphone, TV, Laptop, or Tablet
+
+refine_clean <- refine_clean %>% 
+mutate(product_category = gsub("p", "smartphone", product_category)) %>% 
+mutate(product_category = gsub("v", "tv", product_category)) %>% 
+mutate(product_category = gsub("x", "laptop", product_category)) %>% 
+mutate(product_category = gsub("q", "tablet", product_category))
+```
+
+#### Add Full Address for Geocoding
+
+```{r}
+## Add full address for geocoding
+
+# Create a new column full_address that concatenates the three address fields (address, city, country), separated by commas.
+
+refine_clean <- refine_clean %>% 
+mutate(full_address = paste(address, city, country, sep = ", " ))
+```
+
+#### Create Dummy Variables For Company and Product Category
+
+```{r}
+## Create dummy variables for company and product category
+
+# Create dummy binary variables: 
+# Add four binary (1 or 0) columns for company: company_philips, company_akzo, company_van_houten and company_unilever.
+# Add four binary (1 or 0) columns for product category: product_smartphone, product_tv, product_laptop and product_tablet.
+
+refine_clean <- refine_clean %>% 
+mutate(company_philips = as.numeric(as.logical(company == "philips"))) %>% 
+mutate(company_akzo = as.numeric(as.logical(company == "akzo"))) %>% 
+mutate(company_van_houten = as.numeric(as.logical(company == "van houten"))) %>% 
+mutate(company_unilever = as.numeric(as.logical(company == "unilever"))) %>% 
+mutate(product_smartphone = as.numeric(as.logical(product_category == "smartphone"))) %>% 
+mutate(product_tv = as.numeric(as.logical(product_category == "tv"))) %>% 
+mutate(product_laptop = as.numeric(as.logical(product_category == "laptop"))) %>% 
+mutate(product_tablet = as.numeric(as.logical(product_category == "tablet")))
+```
+
+#### Reorder Columns by Position
+
+```{r}
+## Reorder columns by position
+
+refine_clean <- refine_clean [, c(1, 8, 2, 3, 4, 5, 6, 9, 7, 10, 11, 12, 13, 14, 15, 16, 17)]
+  
+```  
+
+#### Save Cleaned Dataframe as .csv
+
+```{r}
+## Save the cleaned file as .csv
+
+write.csv(refine_clean, "refine_clean.csv", row.names = FALSE)
+
+```
+
